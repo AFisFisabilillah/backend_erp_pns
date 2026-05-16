@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -33,6 +34,13 @@ class AuthenticationController extends Controller
                 "fullname" => $user->fullname,
                 "profile" => $user->profile,
             ]
+        ]);
+    }
+
+    public function logout(Request $request){
+        $request->user()->tokens()->delete();
+        return response()->json([
+            "message" => "logout berhasil"
         ]);
     }
 }
