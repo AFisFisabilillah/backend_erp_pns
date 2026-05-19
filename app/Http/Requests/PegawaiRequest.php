@@ -22,6 +22,7 @@ class PegawaiRequest extends FormRequest
                 "required",
                 "string",
                 Rule::unique('pegawai', 'nip')->ignore($nipLama, 'nip'),
+                "regex:/^\d{18}$/"
             ],
             "tempat_lahir" => "required|string",
             "tgl_lahir" => "required|date|before_or_equal:today",
