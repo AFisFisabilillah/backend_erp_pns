@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('alamat_pegawai', function (Blueprint $table) {
             $table->id('id_alamat');
-            $table->string('nip', 30);
+            $table->string('nip', 30)->unique("nip_unique");
             $table->text('alamat')->nullable();
             $table->string("kota", 50)->nullable();
             $table->string("provinsi", 50)->nullable();
