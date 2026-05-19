@@ -7,6 +7,7 @@ use App\Models\AlamatPegawai;
 use App\Models\JabatanPegawai;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PegawaiController extends Controller
 {
@@ -14,7 +15,13 @@ class PegawaiController extends Controller
     {
         $data = $request->validated();
 
-        $pegawai = DB::transaction(function () use ($data) {
+        $foto = $request->file('foto');
+        $pathFoto=null;
+        if($foto){
+            $pathFoto = $foto->store("public/foto_profile");
+        }
+
+        $pegawai = DB::transaction(function () use ($pathFoto, $data) {
             $pegawai = Pegawai::create([
                 'nip' => $data['nip'],
                 'nama' => $data['nama'],
@@ -24,6 +31,7 @@ class PegawaiController extends Controller
                 'agama' => $data['agama'],
                 'no_hp' => $data['no_hp'],
                 'npwp' => $data['npwp'] ?? null,
+                'foto_pegawai' => $pathFoto,
             ]);
 
             AlamatPegawai::create([

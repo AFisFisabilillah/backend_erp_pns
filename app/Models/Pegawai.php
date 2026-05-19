@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Table('pegawai')]
-#[Fillable(["nip", "nama", "tempat_lahir", "tgl_lahir", "jenis_kelamin", "agama", "no_hp", "npwp"])]
+#[Fillable(["nip",'foto_pegawai', "nama", "tempat_lahir", "tgl_lahir", "jenis_kelamin", "agama", "no_hp", "npwp"])]
 class Pegawai extends Model
 {
     protected $primaryKey = 'nip';
