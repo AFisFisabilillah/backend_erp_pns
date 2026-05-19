@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Resources\Attributes\PreserveKeys;
 
 #[Table('alamat_pegawai')]
-#[Fillable(["alamat", "kota", "provinsi"])]
+#[Fillable(["alamat", "kota", "provinsi","nip"])]
 class AlamatPegawai extends Model
 {
     public function pegawai(): BelongsTo
