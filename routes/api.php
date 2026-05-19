@@ -12,3 +12,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post("/pegawai", [PegawaiController::class, "store"]);
+Route::get("/pegawai", [PegawaiController::class, "index"]);

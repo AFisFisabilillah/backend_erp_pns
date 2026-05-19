@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PegawaiRequest;
 use App\Http\Resources\PegawaiDetailResource;
+use App\Http\Resources\PegawaiSimpleResource;
 use App\Models\AlamatPegawai;
 use App\Models\JabatanPegawai;
 use App\Models\Pegawai;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -55,5 +57,20 @@ class PegawaiController extends Controller
         });
 
         return response()->json(new PegawaiDetailResource($pegawai), 201);
+    }
+
+    public function index(Request $request) {
+        $size = $request->query("size", 10);
+
+        $search = $request->search;
+
+        $query = Pegawai::query();
+       $query->when($search, function ($q, $search) {
+           $q->where("nama", "like", "%$search%");
+       });
+
+       $data = $query->paginate($size);
+
+       return PegawaiSimpleResource::collection($data);
     }
 }
