@@ -35,7 +35,9 @@ class PegawaiRequest extends FormRequest
             "npwp" => [
                 "nullable",
                 "string",
-                Rule::unique('pegawai', 'npwp')->ignore($nipLama, 'nip'),
+                Rule::unique('pegawai', 'npwp')
+                    ->ignore($nipLama, 'nip')
+                    ->where(fn ($query) => $query->whereNull('deleted_at')),
             ],
 
             "alamat.alamat" => "required|string",

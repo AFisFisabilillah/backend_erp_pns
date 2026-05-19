@@ -123,18 +123,67 @@ class PegawaiController extends Controller
         ]);
     }
 
-    public function index(Request $request) {
+    public function destroy(Request $request)
+    {
+        $validated = $request->validate([
+            'id_pegawai' => 'required|array',
+            'id_pegawai.*' => 'required'
+        ]);
+        $pegawai = Pegawai::whereIn('nip', $validated['id_pegawai'])->delete();
+
+        return response()->json([
+            'message' => $pegawai. " pegawai berhasil direstore",
+        ]);
+    }
+
+    public function restore(Request $request)
+    {
+        $validated = $request->validate([
+            'id_pegawai' => 'required|array',
+            'id_pegawai.*' => 'required'
+        ]);
+        $pegawai = Pegawai::onlyTrashed()->whereIn('nip', $validated['id_pegawai'])->get();
+        foreach ($pegawai as $item) {
+            $item->restore();
+        }
+
+        return response()->json([
+            'message' => $pegawai->count() . " pegawai berhasil direstore",
+        ]);
+    }
+
+    public function forceDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'id_pegawai' => 'required|array',
+            'id_pegawai.*' => 'required'
+        ]);
+        $pegawai = Pegawai::onlyTrashed()->whereIn('nip', $validated['id_pegawai'])->get();
+        foreach ($pegawai as $item) {
+            $item->forceDelete();
+        }
+        return response()->json([
+            'message' => $pegawai->count() . " pegawai berhasil hapus",
+        ]);
+    }
+
+    public function trash(){
+        return PegawaiSimpleResource::collection(Pegawai::onlyTrashed()->get());
+    }
+
+    public function index(Request $request)
+    {
         $size = $request->query("size", 10);
 
         $search = $request->search;
 
         $query = Pegawai::query();
-       $query->when($search, function ($q, $search) {
-           $q->where("nama", "like", "%$search%");
-       });
+        $query->when($search, function ($q, $search) {
+            $q->where("nama", "like", "%$search%");
+        });
 
-       $data = $query->paginate($size);
+        $data = $query->paginate($size);
 
-       return PegawaiSimpleResource::collection($data);
+        return PegawaiSimpleResource::collection($data);
     }
 }

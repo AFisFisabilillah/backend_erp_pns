@@ -143,4 +143,42 @@ class PegawaiStoreTest extends TestCase
             'unit_kerja' => $updatePayload['jabatan']['unit_kerja'],
         ]);
     }
+
+    public function test_can_soft_delete_pegawai(): void
+    {
+        $payload = [
+            'nip' => '198901012026051001',
+            'nama' => 'Budi Santoso',
+            'tempat_lahir' => 'Jakarta',
+            'tgl_lahir' => '1989-01-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'no_hp' => '081234567890',
+            'npwp' => '12.345.678.9-012.345',
+            'alamat' => [
+                'alamat' => 'Jl. Merdeka No. 1',
+                'kota' => 'Jakarta Selatan',
+                'provinsi' => 'DKI Jakarta',
+            ],
+            'jabatan' => [
+                'golongan' => 'III/a',
+                'eselon' => 'IV/a',
+                'jabatan' => 'Staf Administrasi',
+                'tempat_tugas' => 'Kantor Pusat',
+                'unit_kerja' => 'SDM',
+            ],
+        ];
+
+        $this->postJson('/api/pegawai', $payload)->assertCreated();
+
+        $response = $this->deleteJson('/api/pegawai/'.$payload['nip']);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('message', 'pegawai berhasil dihapus');
+
+        $this->assertSoftDeleted('pegawai', [
+            'nip' => $payload['nip'],
+        ]);
+    }
 }

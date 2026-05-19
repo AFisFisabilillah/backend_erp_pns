@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Table('pegawai')]
 #[Fillable(["nip",'foto_pegawai', "nama", "tempat_lahir", "tgl_lahir", "jenis_kelamin", "agama", "no_hp", "npwp"])]
 class Pegawai extends Model
 {
+    use SoftDeletes;
+
     protected $primaryKey = 'nip';
     protected $keyType = 'string';
     public $incrementing = false;
