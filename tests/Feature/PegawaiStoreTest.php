@@ -60,4 +60,87 @@ class PegawaiStoreTest extends TestCase
             'unit_kerja' => $payload['jabatan']['unit_kerja'],
         ]);
     }
+
+    public function test_can_update_pegawai_with_same_npwp_and_new_nip(): void
+    {
+        $payload = [
+            'nip' => '198901012026051001',
+            'nama' => 'Budi Santoso',
+            'tempat_lahir' => 'Jakarta',
+            'tgl_lahir' => '1989-01-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'no_hp' => '081234567890',
+            'npwp' => '12.345.678.9-012.345',
+            'alamat' => [
+                'alamat' => 'Jl. Merdeka No. 1',
+                'kota' => 'Jakarta Selatan',
+                'provinsi' => 'DKI Jakarta',
+            ],
+            'jabatan' => [
+                'golongan' => 'III/a',
+                'eselon' => 'IV/a',
+                'jabatan' => 'Staf Administrasi',
+                'tempat_tugas' => 'Kantor Pusat',
+                'unit_kerja' => 'SDM',
+            ],
+        ];
+
+        $this->postJson('/api/pegawai', $payload)->assertCreated();
+
+        $updatePayload = [
+            'nip' => '198901012026051009',
+            'nama' => 'Budi Santoso Update',
+            'tempat_lahir' => 'Bandung',
+            'tgl_lahir' => '1989-01-01',
+            'jenis_kelamin' => 'L',
+            'agama' => 'Islam',
+            'no_hp' => '081298765432',
+            'npwp' => '12.345.678.9-012.345',
+            'alamat' => [
+                'alamat' => 'Jl. Asia Afrika No. 10',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+            ],
+            'jabatan' => [
+                'golongan' => 'III/b',
+                'eselon' => 'III/a',
+                'jabatan' => 'Analis Kepegawaian',
+                'tempat_tugas' => 'BKD',
+                'unit_kerja' => 'Kepegawaian',
+            ],
+        ];
+
+        $response = $this->putJson('/api/pegawai/'.$payload['nip'], $updatePayload);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('message', 'pegawai berhasil diubah')
+            ->assertJsonPath('data.nip', $updatePayload['nip'])
+            ->assertJsonPath('data.nama', $updatePayload['nama'])
+            ->assertJsonPath('data.alamat.kota', $updatePayload['alamat']['kota'])
+            ->assertJsonPath('data.jabatan.jabatan', $updatePayload['jabatan']['jabatan']);
+
+        $this->assertDatabaseMissing('pegawai', [
+            'nip' => $payload['nip'],
+        ]);
+
+        $this->assertDatabaseHas('pegawai', [
+            'nip' => $updatePayload['nip'],
+            'nama' => $updatePayload['nama'],
+            'npwp' => $updatePayload['npwp'],
+        ]);
+
+        $this->assertDatabaseHas('alamat_pegawai', [
+            'nip' => $updatePayload['nip'],
+            'kota' => $updatePayload['alamat']['kota'],
+            'provinsi' => $updatePayload['alamat']['provinsi'],
+        ]);
+
+        $this->assertDatabaseHas('jabatan_pegawai', [
+            'nip' => $updatePayload['nip'],
+            'jabatan' => $updatePayload['jabatan']['jabatan'],
+            'unit_kerja' => $updatePayload['jabatan']['unit_kerja'],
+        ]);
+    }
 }

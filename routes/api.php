@@ -9,7 +9,8 @@ Route::post("/login", [AuthenticationController::class, "login"]);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::delete("/logout", [AuthenticationController::class, "logout"]);
+    Route::post("/pegawai", [PegawaiController::class, "store"]);
+    Route::get("/pegawai", [PegawaiController::class, "index"]);
+    Route::post("/pegawai/{pegawai}", [PegawaiController::class, "update"]);
 });
 
-Route::post("/pegawai", [PegawaiController::class, "store"]);
-Route::get("/pegawai", [PegawaiController::class, "index"]);
