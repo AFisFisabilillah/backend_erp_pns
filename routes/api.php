@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\PegawaiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::post("/login", [AuthenticationController::class, "login"]);
 
-Route::post('/pegawai', [PegawaiController::class, 'store']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::delete("/logout", [AuthenticationController::class, "logout"]);
+});
+
+Route::post("/pegawai", [PegawaiController::class, "store"]);
