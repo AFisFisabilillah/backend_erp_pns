@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PegawaiRequest;
+use App\Http\Resources\PegawaiDetailResource;
 use App\Models\AlamatPegawai;
 use App\Models\JabatanPegawai;
 use App\Models\Pegawai;
@@ -53,9 +54,6 @@ class PegawaiController extends Controller
             return $pegawai->load(['alamat', 'jabatan']);
         });
 
-        return response()->json([
-            'message' => 'pegawai berhasil dibuat',
-            'data' => $pegawai,
-        ], 201);
+        return response()->json(new PegawaiDetailResource($pegawai), 201);
     }
 }
