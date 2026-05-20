@@ -64,7 +64,7 @@ class PegawaiController extends Controller
         ], 201);
     }
 
-    public function update(PegawaiRequest $request, Pegawai $pegawai)
+    public function update(UpdatePegawaiRequest $request, Pegawai $pegawai)
     {
         $data = $request->validated();
 
@@ -132,7 +132,7 @@ class PegawaiController extends Controller
         $pegawai = Pegawai::whereIn('nip', $validated['id_pegawai'])->delete();
 
         return response()->json([
-            'message' => $pegawai. " pegawai berhasil direstore",
+            'message' => $pegawai . ' pegawai berhasil dihapus',
         ]);
     }
 

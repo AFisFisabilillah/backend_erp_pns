@@ -2,12 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class PegawaiStoreTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Sanctum::actingAs(User::factory()->create());
+    }
 
     public function test_can_store_pegawai_with_alamat_and_jabatan(): void
     {
@@ -111,7 +120,7 @@ class PegawaiStoreTest extends TestCase
             ],
         ];
 
-        $response = $this->putJson('/api/pegawai/'.$payload['nip'], $updatePayload);
+        $response = $this->postJson('/api/pegawai/'.$payload['nip'], $updatePayload);
 
         $response
             ->assertOk()
@@ -171,11 +180,13 @@ class PegawaiStoreTest extends TestCase
 
         $this->postJson('/api/pegawai', $payload)->assertCreated();
 
-        $response = $this->deleteJson('/api/pegawai/'.$payload['nip']);
+        $response = $this->deleteJson('/api/pegawai/delete', [
+            'id_pegawai' => [$payload['nip']],
+        ]);
 
         $response
             ->assertOk()
-            ->assertJsonPath('message', 'pegawai berhasil dihapus');
+            ->assertJsonPath('message', '1 pegawai berhasil dihapus');
 
         $this->assertSoftDeleted('pegawai', [
             'nip' => $payload['nip'],
