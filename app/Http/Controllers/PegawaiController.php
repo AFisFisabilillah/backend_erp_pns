@@ -174,16 +174,26 @@ class PegawaiController extends Controller
     public function index(Request $request)
     {
         $size = $request->query("size", 10);
-
         $search = $request->search;
+        $unitKerja = $request->query('unit_kerja');
 
-        $query = Pegawai::query();
+        $query = Pegawai::with('jabatan');
         $query->when($search, function ($q, $search) {
             $q->where("nama", "like", "%$search%");
+        });
+        $query->when($unitKerja, function ($q, $unitKerja) {
+            $q->whereHas('jabatan', function ($jabatanQuery) use ($unitKerja) {
+                $jabatanQuery->where('unit_kerja', 'like', "%$unitKerja%");
+            });
         });
 
         $data = $query->paginate($size);
 
         return PegawaiSimpleResource::collection($data);
+    }
+
+    public function labelUnitKerja(Request $request){
+        $unitKerja = JabatanPegawai::select(["unit_kerja"])->distinct()->get();
+        return response()->json($unitKerja->first());
     }
 }

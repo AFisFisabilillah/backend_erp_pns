@@ -155,6 +155,76 @@ class PegawaiStoreTest extends TestCase
 
     public function test_can_soft_delete_pegawai(): void
     {
+        $payload = $this->pegawaiPayload();
+
+        $this->postJson('/api/pegawai', $payload)->assertCreated();
+
+        $response = $this->deleteJson('/api/pegawai/delete', [
+            'id_pegawai' => [$payload['nip']],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('message', '1 pegawai berhasil dihapus');
+
+        $this->assertSoftDeleted('pegawai', [
+            'nip' => $payload['nip'],
+        ]);
+    }
+
+    public function test_can_filter_pegawai_by_unit_kerja(): void
+    {
+        $sdmPegawai1 = $this->pegawaiPayload([
+            'nip' => '198901012026051011',
+            'nama' => 'Sinta Putri',
+            'npwp' => '12.345.678.9-012.346',
+        ]);
+        $sdmPegawai2 = $this->pegawaiPayload([
+            'nip' => '198901012026051012',
+            'nama' => 'Raka Pratama',
+            'npwp' => '12.345.678.9-012.347',
+        ]);
+        $keuanganPegawai = $this->pegawaiPayload([
+            'nip' => '198901012026051013',
+            'nama' => 'Dina Lestari',
+            'npwp' => '12.345.678.9-012.348',
+            'jabatan' => [
+                'golongan' => 'III/a',
+                'eselon' => 'IV/a',
+                'jabatan' => 'Analis Anggaran',
+                'tempat_tugas' => 'Kantor Pusat',
+                'unit_kerja' => 'Keuangan',
+            ],
+        ]);
+
+        $this->postJson('/api/pegawai', $sdmPegawai1)->assertCreated();
+        $this->postJson('/api/pegawai', $sdmPegawai2)->assertCreated();
+        $this->postJson('/api/pegawai', $keuanganPegawai)->assertCreated();
+
+        $response = $this->getJson('/api/pegawai?unit_kerja=SDM&size=10');
+
+        $response
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonFragment([
+                'nip' => $sdmPegawai1['nip'],
+                'nama' => $sdmPegawai1['nama'],
+                'unit_kerja' => 'SDM',
+            ])
+            ->assertJsonFragment([
+                'nip' => $sdmPegawai2['nip'],
+                'nama' => $sdmPegawai2['nama'],
+                'unit_kerja' => 'SDM',
+            ])
+            ->assertJsonMissing([
+                'nip' => $keuanganPegawai['nip'],
+                'nama' => $keuanganPegawai['nama'],
+                'unit_kerja' => 'Keuangan',
+            ]);
+    }
+
+    private function pegawaiPayload(array $overrides = []): array
+    {
         $payload = [
             'nip' => '198901012026051001',
             'nama' => 'Budi Santoso',
@@ -178,18 +248,6 @@ class PegawaiStoreTest extends TestCase
             ],
         ];
 
-        $this->postJson('/api/pegawai', $payload)->assertCreated();
-
-        $response = $this->deleteJson('/api/pegawai/delete', [
-            'id_pegawai' => [$payload['nip']],
-        ]);
-
-        $response
-            ->assertOk()
-            ->assertJsonPath('message', '1 pegawai berhasil dihapus');
-
-        $this->assertSoftDeleted('pegawai', [
-            'nip' => $payload['nip'],
-        ]);
+        return array_replace_recursive($payload, $overrides);
     }
 }

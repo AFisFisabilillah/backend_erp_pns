@@ -23,6 +23,7 @@ class PegawaiSimpleResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'foto_pegawai' => $this->foto_pegawai,
+            'jabatan' => $this->whenLoaded('jabatan'),
         ];
     }
 }
