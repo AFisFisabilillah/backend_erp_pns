@@ -9,6 +9,7 @@ use App\Http\Resources\PegawaiSimpleResource;
 use App\Models\AlamatPegawai;
 use App\Models\JabatanPegawai;
 use App\Models\Pegawai;
+use App\Services\PegawaiPdfExporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -190,6 +191,30 @@ class PegawaiController extends Controller
         $data = $query->paginate($size);
 
         return PegawaiSimpleResource::collection($data);
+    }
+
+    public function exportPdf(Request $request, PegawaiPdfExporter $exporter)
+    {
+        $search = $request->query('search');
+        $unitKerja = $request->query('unit_kerja');
+        $namaInstansi = $request->query('nama_instansi', config('app.name'));
+
+        $pegawai = Pegawai::with(['alamat', 'jabatan'])
+            ->when($search, function ($q, $search) {
+                $q->where('nama', 'like', "%$search%");
+            })
+            ->when($unitKerja, function ($q, $unitKerja) {
+                $q->whereHas('jabatan', function ($jabatanQuery) use ($unitKerja) {
+                    $jabatanQuery->where('unit_kerja', 'like', "%$unitKerja%");
+                });
+            })
+            ->orderBy('nama')
+            ->get();
+
+        return $exporter->download($pegawai, [
+            'nama_instansi' => $namaInstansi,
+            'unit_kerja' => $unitKerja,
+        ]);
     }
 
     public function labelUnitKerja(Request $request){

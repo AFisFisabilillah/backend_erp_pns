@@ -28,5 +28,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post("/pegawai", [PegawaiController::class, "store"]);
     Route::get("/pegawai", [PegawaiController::class, "index"]);
+    Route::get("/pegawai/export/pdf", [PegawaiController::class, "exportPdf"]);
     Route::post("/pegawai/{pegawai}", [PegawaiController::class, "update"]);
 });
