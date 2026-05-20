@@ -8,6 +8,7 @@ use App\Http\Resources\UserDetailResource;
 use App\Http\Resources\UserSimpleResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -148,5 +149,10 @@ class UserController extends Controller
         });
 
         return UserSimpleResource::collection($query->paginate($size));
+    }
+
+    public function profile(){
+        $user = Auth::user();
+        return new UserDetailResource($user);
     }
 }
