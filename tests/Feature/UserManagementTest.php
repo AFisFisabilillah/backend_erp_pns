@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -16,6 +18,7 @@ class UserManagementTest extends TestCase
         parent::setUp();
 
         Sanctum::actingAs(User::factory()->create());
+        Storage::fake('public');
     }
 
     public function test_can_store_user(): void
@@ -25,6 +28,7 @@ class UserManagementTest extends TestCase
             'fullname' => 'Operator Satu',
             'email' => 'operator1@example.com',
             'password' => 'password123',
+            'profile' => UploadedFile::fake()->image('profile.jpg'),
         ];
 
         $response = $this->postJson('/api/user', $payload);
@@ -36,10 +40,17 @@ class UserManagementTest extends TestCase
             ->assertJsonPath('data.fullname', $payload['fullname'])
             ->assertJsonPath('data.email', $payload['email']);
 
+        $urlProfile = $response->json('data.profile');
+        $this->assertStringStartsWith(asset('storage/profile_user/'), $urlProfile);
+
+        $pathProfile = str_replace(asset('storage') . '/', '', $urlProfile);
+        Storage::disk('public')->assertExists($pathProfile);
+
         $this->assertDatabaseHas('users', [
             'name' => $payload['name'],
             'fullname' => $payload['fullname'],
             'email' => $payload['email'],
+            'profile' => $pathProfile,
         ]);
     }
 

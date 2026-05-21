@@ -22,7 +22,7 @@ class PegawaiSimpleResource extends JsonResource
             'npwp' => $this->npwp,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'foto_pegawai' => $this->foto_pegawai,
+            'foto_pegawai' => $this->foto_pegawai ? asset('storage/' . $this->foto_pegawai) : null,
             'jabatan' => $this->whenLoaded('jabatan'),
         ];
     }

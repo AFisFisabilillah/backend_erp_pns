@@ -22,7 +22,7 @@ class UserController extends Controller
         $pathProfile = null;
 
         if ($profile) {
-            $pathProfile = $profile->store('public/profile_user');
+            $pathProfile = $profile->store('profile_user', 'public');
         }
 
         $user = DB::transaction(function () use ($data, $pathProfile) {
@@ -49,7 +49,7 @@ class UserController extends Controller
         $pathProfileBaru = $user->profile;
 
         if ($profile) {
-            $pathProfileBaru = $profile->store('public/profile_user');
+            $pathProfileBaru = $profile->store('profile_user', 'public');
         }
 
         $profileLama = $user->profile;
@@ -72,6 +72,7 @@ class UserController extends Controller
         });
 
         if ($profile && $profileLama && $profileLama !== $pathProfileBaru) {
+            Storage::disk('public')->delete($profileLama);
             Storage::delete($profileLama);
         }
 

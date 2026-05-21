@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -16,6 +18,7 @@ class PegawaiStoreTest extends TestCase
         parent::setUp();
 
         Sanctum::actingAs(User::factory()->create());
+        Storage::fake('public');
     }
 
     public function test_can_store_pegawai_with_alamat_and_jabatan(): void
@@ -29,6 +32,7 @@ class PegawaiStoreTest extends TestCase
             'agama' => 'Islam',
             'no_hp' => '081234567890',
             'npwp' => '12.345.678.9-012.345',
+            'foto' => UploadedFile::fake()->image('pegawai.jpg'),
             'alamat' => [
                 'alamat' => 'Jl. Merdeka No. 1',
                 'kota' => 'Jakarta Selatan',
@@ -52,9 +56,16 @@ class PegawaiStoreTest extends TestCase
             ->assertJsonPath('data.alamat.kota', $payload['alamat']['kota'])
             ->assertJsonPath('data.jabatan.jabatan', $payload['jabatan']['jabatan']);
 
+        $urlFoto = $response->json('data.foto_pegawai');
+        $this->assertStringStartsWith(asset('storage/foto_profile/'), $urlFoto);
+
+        $pathFoto = str_replace(asset('storage') . '/', '', $urlFoto);
+        Storage::disk('public')->assertExists($pathFoto);
+
         $this->assertDatabaseHas('pegawai', [
             'nip' => $payload['nip'],
             'nama' => $payload['nama'],
+            'foto_pegawai' => $pathFoto,
         ]);
 
         $this->assertDatabaseHas('alamat_pegawai', [
@@ -153,6 +164,28 @@ class PegawaiStoreTest extends TestCase
         ]);
     }
 
+    public function test_can_show_pegawai_detail(): void
+    {
+        $payload = $this->pegawaiPayload();
+
+        $this->postJson('/api/pegawai', $payload)->assertCreated();
+
+        $response = $this->getJson('/api/pegawai/'.$payload['nip']);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.nip', $payload['nip'])
+            ->assertJsonPath('data.nama', $payload['nama'])
+            ->assertJsonPath('data.alamat.alamat', $payload['alamat']['alamat'])
+            ->assertJsonPath('data.alamat.kota', $payload['alamat']['kota'])
+            ->assertJsonPath('data.alamat.provinsi', $payload['alamat']['provinsi'])
+            ->assertJsonPath('data.jabatan.golongan', $payload['jabatan']['golongan'])
+            ->assertJsonPath('data.jabatan.eselon', $payload['jabatan']['eselon'])
+            ->assertJsonPath('data.jabatan.jabatan', $payload['jabatan']['jabatan'])
+            ->assertJsonPath('data.jabatan.tempat_tugas', $payload['jabatan']['tempat_tugas'])
+            ->assertJsonPath('data.jabatan.unit_kerja', $payload['jabatan']['unit_kerja']);
+    }
+
     public function test_can_soft_delete_pegawai(): void
     {
         $payload = $this->pegawaiPayload();
@@ -220,6 +253,44 @@ class PegawaiStoreTest extends TestCase
                 'nip' => $keuanganPegawai['nip'],
                 'nama' => $keuanganPegawai['nama'],
                 'unit_kerja' => 'Keuangan',
+            ]);
+    }
+
+    public function test_can_get_distinct_unit_kerja_labels(): void
+    {
+        $sdmPegawai1 = $this->pegawaiPayload([
+            'nip' => '198901012026051021',
+            'npwp' => '12.345.678.9-012.356',
+        ]);
+        $sdmPegawai2 = $this->pegawaiPayload([
+            'nip' => '198901012026051022',
+            'npwp' => '12.345.678.9-012.357',
+        ]);
+        $keuanganPegawai = $this->pegawaiPayload([
+            'nip' => '198901012026051023',
+            'npwp' => '12.345.678.9-012.358',
+            'jabatan' => [
+                'unit_kerja' => 'Keuangan',
+            ],
+        ]);
+
+        $this->postJson('/api/pegawai', $sdmPegawai1)->assertCreated();
+        $this->postJson('/api/pegawai', $sdmPegawai2)->assertCreated();
+        $this->postJson('/api/pegawai', $keuanganPegawai)->assertCreated();
+
+        $response = $this->getJson('/api/unit-kerja');
+
+        $response
+            ->assertOk()
+            ->assertExactJson([
+                [
+                    'label' => 'Keuangan',
+                    'value' => 'Keuangan',
+                ],
+                [
+                    'label' => 'SDM',
+                    'value' => 'SDM',
+                ],
             ]);
     }
 

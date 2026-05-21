@@ -20,7 +20,7 @@ class PegawaiDetailResource extends JsonResource
             'agama' => $this->agama,
             'no_hp' => $this->no_hp,
             'npwp' => $this->npwp,
-            'foto_pegawai' => $this->foto_pegawai,
+            'foto_pegawai' => $this->foto_pegawai ? asset('storage/' . $this->foto_pegawai) : null,
             'alamat' => $this->alamat,
             'jabatan' => $this->jabatan,
             'created_at' => $this->created_at,

@@ -24,7 +24,7 @@ class PegawaiController extends Controller
         $pathFoto = null;
 
         if ($foto) {
-            $pathFoto = $foto->store("public/foto_profile");
+            $pathFoto = $foto->store('foto_profile', 'public');
         }
 
         $pegawai = DB::transaction(function () use ($pathFoto, $data) {
@@ -73,7 +73,7 @@ class PegawaiController extends Controller
         $pathFotoBaru = $pegawai->foto_pegawai;
 
         if ($foto) {
-            $pathFotoBaru = $foto->store("public/foto_profile");
+            $pathFotoBaru = $foto->store('foto_profile', 'public');
         }
 
         $fotoLama = $pegawai->foto_pegawai;
@@ -115,6 +115,7 @@ class PegawaiController extends Controller
         });
 
         if ($foto && $fotoLama && $fotoLama !== $pathFotoBaru) {
+            Storage::disk('public')->delete($fotoLama);
             Storage::delete($fotoLama);
         }
 
@@ -193,6 +194,11 @@ class PegawaiController extends Controller
         return PegawaiSimpleResource::collection($data);
     }
 
+    public function show(Pegawai $pegawai)
+    {
+        return new PegawaiDetailResource($pegawai->load(['alamat', 'jabatan']));
+    }
+
     public function exportPdf(Request $request, PegawaiPdfExporter $exporter)
     {
         $search = $request->query('search');
@@ -218,7 +224,19 @@ class PegawaiController extends Controller
     }
 
     public function labelUnitKerja(Request $request){
-        $unitKerja = JabatanPegawai::select(["unit_kerja"])->distinct()->get();
-        return response()->json($unitKerja->first());
+        $unitKerja = JabatanPegawai::query()
+            ->whereNotNull('unit_kerja')
+            ->where('unit_kerja', '!=', '')
+            ->select('unit_kerja')
+            ->distinct()
+            ->orderBy('unit_kerja')
+            ->pluck('unit_kerja')
+            ->map(fn ($unitKerja) => [
+                'label' => $unitKerja,
+                'value' => $unitKerja,
+            ])
+            ->values();
+
+        return response()->json($unitKerja);
     }
 }

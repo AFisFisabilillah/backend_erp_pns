@@ -32,7 +32,7 @@ class AuthenticationController extends Controller
                 "name" => $user->name,
                 "email" => $user->email,
                 "fullname" => $user->fullname,
-                "profile" => $user->profile,
+                "profile" => $user->profile ? asset('storage/' . $user->profile) : null,
             ]
         ]);
     }
