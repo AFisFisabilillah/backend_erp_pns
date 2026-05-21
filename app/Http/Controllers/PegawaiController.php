@@ -199,6 +199,48 @@ class PegawaiController extends Controller
         return new PegawaiDetailResource($pegawai->load(['alamat', 'jabatan']));
     }
 
+    public function dashboard()
+    {
+        $golongan = Pegawai::query()
+            ->join('jabatan_pegawai', 'pegawai.nip', '=', 'jabatan_pegawai.nip')
+            ->whereNotNull('jabatan_pegawai.golongan')
+            ->where('jabatan_pegawai.golongan', '!=', '')
+            ->select('jabatan_pegawai.golongan', DB::raw('count(*) as total'))
+            ->groupBy('jabatan_pegawai.golongan')
+            ->orderBy('jabatan_pegawai.golongan')
+            ->get()
+            ->map(fn ($item) => [
+                'label' => $item->golongan,
+                'value' => $item->golongan,
+                'total' => (int) $item->total,
+            ]);
+
+        $jenisKelamin = Pegawai::query()
+            ->select('jenis_kelamin', DB::raw('count(*) as total'))
+            ->whereIn('jenis_kelamin', ['L', 'P'])
+            ->groupBy('jenis_kelamin')
+            ->pluck('total', 'jenis_kelamin');
+
+        return response()->json([
+            'data' => [
+                'total_pegawai' => Pegawai::count(),
+                'bar_chart_golongan' => $golongan,
+                'pie_chart_jenis_kelamin' => [
+                    [
+                        'label' => 'Laki-laki',
+                        'value' => 'L',
+                        'total' => (int) ($jenisKelamin['L'] ?? 0),
+                    ],
+                    [
+                        'label' => 'Perempuan',
+                        'value' => 'P',
+                        'total' => (int) ($jenisKelamin['P'] ?? 0),
+                    ],
+                ],
+            ],
+        ]);
+    }
+
     public function exportPdf(Request $request, PegawaiPdfExporter $exporter)
     {
         $search = $request->query('search');

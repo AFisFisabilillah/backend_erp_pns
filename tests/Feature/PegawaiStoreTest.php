@@ -294,6 +294,56 @@ class PegawaiStoreTest extends TestCase
             ]);
     }
 
+    public function test_can_get_dashboard_summary(): void
+    {
+        $pegawaiLakiLakiGolonganTigaA = $this->pegawaiPayload([
+            'nip' => '198901012026051031',
+            'npwp' => '12.345.678.9-012.366',
+            'jenis_kelamin' => 'L',
+            'jabatan' => [
+                'golongan' => 'III/a',
+            ],
+        ]);
+        $pegawaiLakiLakiGolonganTigaB = $this->pegawaiPayload([
+            'nip' => '198901012026051032',
+            'npwp' => '12.345.678.9-012.367',
+            'jenis_kelamin' => 'L',
+            'jabatan' => [
+                'golongan' => 'III/b',
+            ],
+        ]);
+        $pegawaiPerempuanGolonganTigaA = $this->pegawaiPayload([
+            'nip' => '198901012026051033',
+            'npwp' => '12.345.678.9-012.368',
+            'jenis_kelamin' => 'P',
+            'jabatan' => [
+                'golongan' => 'III/a',
+            ],
+        ]);
+
+        $this->postJson('/api/pegawai', $pegawaiLakiLakiGolonganTigaA)->assertCreated();
+        $this->postJson('/api/pegawai', $pegawaiLakiLakiGolonganTigaB)->assertCreated();
+        $this->postJson('/api/pegawai', $pegawaiPerempuanGolonganTigaA)->assertCreated();
+
+        $response = $this->getJson('/api/dashboard');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.total_pegawai', 3)
+            ->assertJsonPath('data.bar_chart_golongan.0.label', 'III/a')
+            ->assertJsonPath('data.bar_chart_golongan.0.value', 'III/a')
+            ->assertJsonPath('data.bar_chart_golongan.0.total', 2)
+            ->assertJsonPath('data.bar_chart_golongan.1.label', 'III/b')
+            ->assertJsonPath('data.bar_chart_golongan.1.value', 'III/b')
+            ->assertJsonPath('data.bar_chart_golongan.1.total', 1)
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.0.label', 'Laki-laki')
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.0.value', 'L')
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.0.total', 2)
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.1.label', 'Perempuan')
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.1.value', 'P')
+            ->assertJsonPath('data.pie_chart_jenis_kelamin.1.total', 1);
+    }
+
     private function pegawaiPayload(array $overrides = []): array
     {
         $payload = [
